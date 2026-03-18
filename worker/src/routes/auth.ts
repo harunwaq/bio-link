@@ -66,7 +66,7 @@ auth.post('/signup', async (c) => {
     .bind(generateId(), userId, code, expiresAt)
     .run();
 
-  await sendVerificationEmail(email, code);
+  await sendVerificationEmail(email, code, c.env.RESEND_API_KEY);
 
   return c.json({ message: 'Signup successful. Check your email for verification code.', userId });
 });
@@ -171,7 +171,7 @@ auth.post('/login', async (c) => {
     )
       .bind(generateId(), user.id, code, expiresAt)
       .run();
-    await sendVerificationEmail(email, code);
+    await sendVerificationEmail(email, code, c.env.RESEND_API_KEY);
     return c.json({ error: 'Email not verified. New code sent.', needsVerification: true }, 403);
   }
 

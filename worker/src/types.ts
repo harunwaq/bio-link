@@ -6,6 +6,7 @@ export interface Env {
   AVATARS?: R2Bucket;
   JWT_SECRET: string;
   FRONTEND_URL: string;
+  RESEND_API_KEY: string;
 }
 
 export interface User {

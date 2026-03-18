@@ -44,7 +44,7 @@ subscribers.post('/send-email', async (c) => {
     return c.json({ error: 'No subscribers to email' }, 400);
   }
 
-  await sendSubscriberEmail(emails, subject, body);
+  await sendSubscriberEmail(emails, subject, body, c.env.RESEND_API_KEY);
 
   return c.json({ message: `Email sent to ${emails.length} subscribers` });
 });
