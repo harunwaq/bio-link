@@ -3,7 +3,7 @@ import { Context } from 'hono';
 export interface Env {
   DB: D1Database;
   SESSIONS: KVNamespace;
-  AVATARS: R2Bucket;
+  AVATARS?: R2Bucket;
   JWT_SECRET: string;
   FRONTEND_URL: string;
 }

@@ -3,18 +3,19 @@ main = "src/index.ts"
 compatibility_date = "2024-05-12"
 
 [vars]
-JWT_SECRET = "change-this-to-a-secure-secret-in-production"
-FRONTEND_URL = "http://localhost:5173"
+JWT_SECRET = "bL9x$kQ2mP7vR4nW8jF1hT6yA0cE3dZ5"
+FRONTEND_URL = "https://bio-link-ap1.pages.dev"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "biolink-db"
-database_id = "placeholder-replace-with-real-id"
+database_id = "f76cc7a8-9987-467b-a1a9-9ecf1a3dc7b3"
 
 [[kv_namespaces]]
 binding = "SESSIONS"
-id = "placeholder-replace-with-real-id"
+id = "ca4fa8f4685e42909cb3680a4644dc04"
 
-[[r2_buckets]]
-binding = "AVATARS"
-bucket_name = "biolink-avatars"
+# R2 bucket - enable R2 in Cloudflare dashboard first, then uncomment:
+# [[r2_buckets]]
+# binding = "AVATARS"
+# bucket_name = "biolink-avatars"
