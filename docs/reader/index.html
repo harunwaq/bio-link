@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Reader">
-<meta name="description" content="Read PDFs in dark mode, offline, with your own notes. Files stay on your device.">
+<meta name="description" content="Read PDFs and Markdown files in dark mode, offline, with your own notes. Files stay on your device.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -22,21 +22,25 @@
 <section id="library" class="view">
   <header class="bar lib-bar">
     <h1>Reader</h1>
-    <button id="settingsBtn" class="icon-btn" aria-label="Settings">
+    <button id="settingsBtn" class="icon-btn" aria-label="Settings and backup">
       <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
     </button>
   </header>
+  <div class="lib-tools">
+    <input id="libSearch" type="search" placeholder="Search your files">
+    <div id="folderChips" class="chips"></div>
+  </div>
   <div id="installHint" class="hint" hidden></div>
+  <div id="backupHint" class="hint" hidden></div>
   <div id="docList"></div>
   <div id="empty" class="empty" hidden>
-    <p class="empty-title">No PDFs yet</p>
-    <p>Tap <b>Add PDF</b> to open a file from your phone. It is saved inside this app, so it opens offline next time, at the page where you stopped.</p>
+    <p class="empty-title">No files yet</p>
+    <p>Tap <b>Add file</b> to open a PDF or Markdown file from your phone. It is saved inside this app, so it opens offline next time, at the spot where you stopped.</p>
   </div>
-  <label class="fab" id="addBtn">
+  <button class="fab" id="addBtn">
     <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-    <span>Add PDF</span>
-    <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple hidden>
-  </label>
+    <span>Add file</span>
+  </button>
 </section>
 
 <!-- Reader -->
@@ -46,6 +50,9 @@
       <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
     <div class="doc-title" id="docTitle"></div>
+    <button id="filesBtn" class="icon-btn" aria-label="Switch file">
+      <svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
+    </button>
     <button id="themeBtn" class="icon-btn" aria-label="Change theme">
       <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
     </button>
@@ -70,10 +77,10 @@
   </button>
 
   <footer class="bar bottom-bar">
-    <button id="zoomOut" class="icon-btn" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
-    <button id="zoomFit" class="text-btn" aria-label="Fit width">Fit</button>
-    <button id="zoomIn" class="icon-btn" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-    <button id="pageBtn" class="page-btn" aria-label="Go to page"><span id="pageNow">1</span> / <span id="pageTotal">1</span></button>
+    <button id="zoomOut" class="icon-btn" aria-label="Smaller"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+    <button id="zoomFit" class="text-btn" aria-label="Reset size">Fit</button>
+    <button id="zoomIn" class="icon-btn" aria-label="Bigger"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button id="pageBtn" class="page-btn" aria-label="Go to page"><span id="pageNow">1</span></button>
     <button id="addNoteBtn" class="primary-btn">
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Note
     </button>
@@ -91,7 +98,7 @@
       <button id="noteClose" class="text-btn">Cancel</button>
     </div>
     <blockquote id="noteQuote" hidden></blockquote>
-    <textarea id="noteText" rows="5" placeholder="Write your note"></textarea>
+    <textarea id="noteText" rows="5" placeholder="Write your note" dir="auto"></textarea>
     <div class="colors" id="noteColors">
       <button data-c="yellow" class="chip c-yellow" aria-label="Yellow"></button>
       <button data-c="green" class="chip c-green" aria-label="Green"></button>
@@ -114,7 +121,7 @@
       <button id="notesClose" class="text-btn">Done</button>
     </div>
     <input id="notesSearch" type="search" placeholder="Search notes">
-    <div id="notesList"></div>
+    <div id="notesList" class="scroll-list"></div>
     <div class="sheet-actions">
       <button id="notesCopy" class="text-btn">Copy all</button>
       <span class="spacer"></span>
@@ -123,15 +130,33 @@
   </div>
 </div>
 
+<!-- File switcher -->
+<div id="filesPanel" class="sheet" hidden>
+  <div class="sheet-card tall">
+    <div class="sheet-head">
+      <span>Your files</span>
+      <button id="filesClose" class="text-btn">Done</button>
+    </div>
+    <input id="filesSearch" type="search" placeholder="Search your files">
+    <div id="filesList" class="scroll-list"></div>
+    <div class="sheet-actions">
+      <span class="small">Each file stays at the spot where you left it.</span>
+      <span class="spacer"></span>
+      <button id="filesAdd" class="primary-btn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add from phone</button>
+    </div>
+  </div>
+</div>
+
 <!-- Generic action sheet -->
 <div id="actionSheet" class="sheet" hidden>
   <div class="sheet-card">
     <div class="sheet-head"><span id="actionTitle"></span><button id="actionClose" class="text-btn">Close</button></div>
-    <div id="actionBody"></div>
+    <div id="actionBody" class="scroll-list"></div>
   </div>
 </div>
 
-<input type="file" id="restoreInput" accept="application/json,.json" hidden>
+<input type="file" id="fileInput" accept=".pdf,.md,.markdown,.txt,application/pdf,text/markdown,text/plain" multiple hidden>
+<input type="file" id="restoreInput" accept=".zip,.json,application/zip,application/json" hidden>
 <div id="toast" class="toast" hidden></div>
 
 <script type="module" src="app.js"></script>

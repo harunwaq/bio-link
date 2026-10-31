@@ -185,3 +185,55 @@ textarea:focus, input:focus { border-color: var(--accent); }
 .small { font-size: 13px; color: var(--muted); margin: 0; }
 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(90px + var(--sab)); z-index: 50; background: #f2f2f2; color: #111; padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 14px; box-shadow: 0 6px 18px rgba(0,0,0,0.4); max-width: 88vw; text-align: center; }
+
+/* ---------- Library tools ---------- */
+.lib-tools { padding: 4px calc(14px + var(--sar)) 2px calc(14px + var(--sal)); display: flex; flex-direction: column; gap: 8px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.fchip { flex: none; padding: 6px 13px; border-radius: 16px; background: var(--card); color: var(--muted); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.fchip.on { background: var(--accent); color: var(--accent-text); }
+.hint .row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.type-tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .5px; padding: 1px 5px; border-radius: 4px; background: var(--card2); color: var(--muted); margin-right: 6px; vertical-align: 2px; }
+.thumb.md-thumb { filter: none; background: var(--card2); color: var(--muted); font-size: 8px; line-height: 1.25; padding: 6px 5px; overflow: hidden; text-align: left; white-space: normal; word-break: break-word; }
+.thumb.md-thumb b { display: block; color: var(--text); font-size: 9px; margin-bottom: 3px; }
+.scroll-list { overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; min-height: 0; }
+#filesList { display: flex; flex-direction: column; gap: 8px; }
+.doc.compact { padding: 8px; }
+.doc.compact .thumb { width: 44px; height: 58px; }
+.doc.current { outline: 2px solid var(--accent); }
+
+/* ---------- Markdown reading ---------- */
+.md {
+  --md-size: 18px;
+  max-width: 720px; margin: 0 auto; padding: 4px 18px 0 38px;
+  font-size: var(--md-size); line-height: 1.65; color: var(--text);
+  word-wrap: break-word; overflow-wrap: anywhere;
+  -webkit-user-select: text; user-select: text;
+}
+#pages.md-mode { width: auto; padding-left: 0; padding-right: 0; }
+.md > * { position: relative; }
+.md h1, .md h2, .md h3, .md h4 { line-height: 1.3; margin: 1.4em 0 .5em; }
+.md h1 { font-size: 1.6em; } .md h2 { font-size: 1.35em; } .md h3 { font-size: 1.15em; }
+.md p, .md ul, .md ol, .md blockquote, .md pre, .md table { margin: 0 0 1em; }
+.md a { color: var(--accent); }
+body.theme-light .md a { color: #9a6a00; }
+.md blockquote { border-left: 3px solid var(--line); padding: 2px 0 2px 14px; color: var(--muted); max-height: none; background: none; border-radius: 0; font-size: 1em; }
+.md code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .88em; background: var(--card2); padding: 1px 5px; border-radius: 5px; }
+.md pre { background: var(--card); padding: 12px; border-radius: 10px; overflow-x: auto; }
+.md pre code { background: none; padding: 0; }
+.md img { max-width: 100%; height: auto; border-radius: 6px; }
+.md table { border-collapse: collapse; display: block; overflow-x: auto; }
+.md th, .md td { border: 1px solid var(--line); padding: 6px 10px; }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+.md .wikilink { color: var(--accent); }
+.md details.props { font-size: .8em; color: var(--muted); margin-bottom: 1.2em; }
+.md details.props pre { white-space: pre-wrap; }
+.md ::selection { background: rgba(255, 196, 0, 0.45); }
+.md mark.hl-md { color: inherit; border-radius: 2px; padding: 0 1px; }
+.md mark.hl-md.c-yellow { background: rgba(255, 196, 0, 0.38); }
+.md mark.hl-md.c-green { background: rgba(60, 210, 110, 0.34); }
+.md mark.hl-md.c-blue { background: rgba(70, 150, 255, 0.36); }
+.md mark.hl-md.c-pink { background: rgba(255, 90, 170, 0.36); }
+.md .pin { position: absolute; left: -32px; top: 0.15em; margin: 0; width: 24px; height: 24px; }
+.sheet-actions .primary-btn { white-space: nowrap; flex: none; }
+.sheet-actions .small { min-width: 0; }
