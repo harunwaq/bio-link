@@ -1347,11 +1347,13 @@ document.addEventListener('keydown', (e) => {
 
 // ---------- Start ----------
 if ('serviceWorker' in navigator) {
+  // On the first visit there is no old version to replace, so never reload then.
+  const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('Service worker failed', e));
   let reloaded = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    // a new version was installed; reload only when nothing is open
-    if (reloaded || S.doc) return;
+    // a new version was installed; reload only when nothing is open or in progress
+    if (!hadController || reloaded || S.doc || !$('loading').hidden) return;
     reloaded = true;
     location.reload();
   });

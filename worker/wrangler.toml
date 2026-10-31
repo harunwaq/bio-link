@@ -2,8 +2,10 @@ name = "biolink-worker"
 main = "src/index.ts"
 compatibility_date = "2024-05-12"
 
+# JWT_SECRET is a secret, so it is not in this file (the repo is public).
+# Set it once with: npx wrangler secret put JWT_SECRET
+# or in the Cloudflare dashboard: biolink-worker > Settings > Variables and Secrets.
 [vars]
-JWT_SECRET = "bL9x$kQ2mP7vR4nW8jF1hT6yA0cE3dZ5"
 FRONTEND_URL = "https://bio-link-ap1.pages.dev"
 
 [[d1_databases]]

@@ -28,6 +28,14 @@ app.use(
   })
 );
 
+// Refuse to run without a login secret, so tokens are never signed with an empty key
+app.use('/api/*', async (c, next) => {
+  if (!c.env.JWT_SECRET || c.env.JWT_SECRET.length < 32) {
+    return c.json({ error: 'Server is missing JWT_SECRET' }, 500);
+  }
+  await next();
+});
+
 // Health check
 app.get('/api/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
