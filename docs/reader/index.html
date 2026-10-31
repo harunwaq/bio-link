@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<meta name="color-scheme" content="dark light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Reader">
+<meta name="description" content="Read PDFs in dark mode, offline, with your own notes. Files stay on your device.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+<title>Reader</title>
+</head>
+<body class="theme-dark">
+
+<!-- Library -->
+<section id="library" class="view">
+  <header class="bar lib-bar">
+    <h1>Reader</h1>
+    <button id="settingsBtn" class="icon-btn" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+    </button>
+  </header>
+  <div id="installHint" class="hint" hidden></div>
+  <div id="docList"></div>
+  <div id="empty" class="empty" hidden>
+    <p class="empty-title">No PDFs yet</p>
+    <p>Tap <b>Add PDF</b> to open a file from your phone. It is saved inside this app, so it opens offline next time, at the page where you stopped.</p>
+  </div>
+  <label class="fab" id="addBtn">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    <span>Add PDF</span>
+    <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple hidden>
+  </label>
+</section>
+
+<!-- Reader -->
+<section id="reader" class="view" hidden>
+  <header class="bar top-bar">
+    <button id="backBtn" class="icon-btn" aria-label="Back to library">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="doc-title" id="docTitle"></div>
+    <button id="themeBtn" class="icon-btn" aria-label="Change theme">
+      <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    </button>
+    <button id="notesBtn" class="icon-btn" aria-label="All notes">
+      <svg viewBox="0 0 24 24"><path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4M8 9h8M8 13h5"/></svg>
+      <span class="badge" id="noteCount" hidden></span>
+    </button>
+  </header>
+
+  <div id="scroller">
+    <div id="pages"></div>
+  </div>
+
+  <div id="placeBanner" class="banner" hidden>
+    <span>Tap the spot for your note</span>
+    <button id="placeCancel" class="text-btn">Cancel</button>
+  </div>
+
+  <button id="selNoteBtn" class="sel-btn" hidden>
+    <svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>
+    Highlight and note
+  </button>
+
+  <footer class="bar bottom-bar">
+    <button id="zoomOut" class="icon-btn" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+    <button id="zoomFit" class="text-btn" aria-label="Fit width">Fit</button>
+    <button id="zoomIn" class="icon-btn" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button id="pageBtn" class="page-btn" aria-label="Go to page"><span id="pageNow">1</span> / <span id="pageTotal">1</span></button>
+    <button id="addNoteBtn" class="primary-btn">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Note
+    </button>
+  </footer>
+  <div id="pagePill" class="page-pill"></div>
+</section>
+
+<div id="loading" class="loading" hidden><div class="spinner"></div><span id="loadingText">Opening…</span></div>
+
+<!-- Note editor -->
+<div id="noteSheet" class="sheet" hidden>
+  <div class="sheet-card">
+    <div class="sheet-head">
+      <span id="noteSheetTitle">New note</span>
+      <button id="noteClose" class="text-btn">Cancel</button>
+    </div>
+    <blockquote id="noteQuote" hidden></blockquote>
+    <textarea id="noteText" rows="5" placeholder="Write your note"></textarea>
+    <div class="colors" id="noteColors">
+      <button data-c="yellow" class="chip c-yellow" aria-label="Yellow"></button>
+      <button data-c="green" class="chip c-green" aria-label="Green"></button>
+      <button data-c="blue" class="chip c-blue" aria-label="Blue"></button>
+      <button data-c="pink" class="chip c-pink" aria-label="Pink"></button>
+    </div>
+    <div class="sheet-actions">
+      <button id="noteDelete" class="danger-btn" hidden>Delete</button>
+      <span class="spacer"></span>
+      <button id="noteSave" class="primary-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notes list -->
+<div id="notesPanel" class="sheet" hidden>
+  <div class="sheet-card tall">
+    <div class="sheet-head">
+      <span>Notes</span>
+      <button id="notesClose" class="text-btn">Done</button>
+    </div>
+    <input id="notesSearch" type="search" placeholder="Search notes">
+    <div id="notesList"></div>
+    <div class="sheet-actions">
+      <button id="notesCopy" class="text-btn">Copy all</button>
+      <span class="spacer"></span>
+      <button id="notesExport" class="primary-btn">Export notes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generic action sheet -->
+<div id="actionSheet" class="sheet" hidden>
+  <div class="sheet-card">
+    <div class="sheet-head"><span id="actionTitle"></span><button id="actionClose" class="text-btn">Close</button></div>
+    <div id="actionBody"></div>
+  </div>
+</div>
+
+<input type="file" id="restoreInput" accept="application/json,.json" hidden>
+<div id="toast" class="toast" hidden></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
