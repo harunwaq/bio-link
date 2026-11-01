@@ -332,7 +332,7 @@ function docMenu(d, folders) {
       if (name && name.trim()) { d.name = name.trim(); await idb.put('docs', d); renderLibrary(); }
     } },
     { text: 'Move to folder', sub: d.folder || 'none', run: () => folderMenu(d, folders) },
-    { text: 'Export notes', run: () => exportNotes(d) },
+    { text: 'Send with comments', run: () => sendSheet(d) },
     { text: 'Share the file', run: async () => {
       const f = await idb.get('files', d.id);
       if (!f) { toast('File not on this device'); return; }
@@ -456,6 +456,8 @@ $('settingsBtn').onclick = async () => {
   sheet('Settings', [
     { label: 'Reading theme' },
     ...THEMES.map(([k, name]) => ({ text: name, on: k === theme, keepOpen: true, run: () => { applyTheme(k); $('settingsBtn').onclick(); } })),
+    { label: 'Sharing' },
+    { text: 'Name on your comments', sub: authorName(), run: () => { const v = prompt('Name shown on comments you send', authorName()); if (v && v.trim()) { localStorage.setItem('author', v.trim()); toast('Saved'); } } },
     { label: 'Backup' },
     { text: 'Full backup: files, notes and positions', sub: '.zip', run: fullBackup },
     { text: 'Notes and positions only', sub: '.json', run: notesBackup },
@@ -1329,7 +1331,85 @@ async function exportNotes(doc) {
   if (!notes.length) { toast('No notes in this file yet'); return; }
   await shareOrDownload(`${safeName(doc.name)} - notes.md`, notesMarkdown(doc, notes));
 }
-$('notesExport').onclick = () => S.doc && exportNotes(S.doc);
+$('notesExport').onclick = () => { if (S.doc) { $('notesPanel').hidden = true; sendSheet(S.doc); } };
+
+// ---------- Sending a file with comments ----------
+const authorName = () => localStorage.getItem('author') || 'Harun';
+async function notesFor(doc) {
+  return (doc.id === S.doc?.id ? S.notes : await idb.notesOf(doc.id)).slice().sort(byPlace)
+    .map((n, i) => ({ ...n, num: i + 1 }));
+}
+async function sendSheet(doc) {
+  const notes = await notesFor(doc);
+  if (!notes.length) { toast('No comments in this file yet'); return; }
+  const type = doc.type || 'pdf';
+  const items = [];
+  if (type === 'pdf') {
+    items.push({ text: 'PDF with my comments', sub: '.pdf', run: () => sendAnnotatedPdf(doc, notes) });
+  } else {
+    items.push({ text: 'PDF with my comments', sub: 'print', run: () => printWithComments(doc) });
+    items.push({ text: 'Markdown with my comments', sub: '.md', run: () => sendMarkdown(doc, notes) });
+  }
+  items.push({ text: 'Only the comments, as a list', sub: '.md', run: () => exportNotes(doc) });
+  items.push({ note: type === 'pdf'
+    ? `The PDF opens in any PDF app (iPhone Files, Preview, Adobe, Chrome). Each comment is a numbered circle on the page, highlights stay highlighted, and a "Comments" page at the end lists them all. Comments are signed "${esc(authorName())}"; change that in Settings.`
+    : 'For a PDF, the phone\'s print screen opens: choose Share or Save to Files there. The Markdown copy puts each comment under its paragraph.' });
+  sheet(`Send "${doc.name}"`, items);
+}
+async function sendAnnotatedPdf(doc, notes) {
+  $('loading').hidden = false;
+  $('loadingText').textContent = 'Adding your comments to the PDF…';
+  try {
+    const f = await idb.get('files', doc.id);
+    if (!f) throw new Error('the PDF is not on this device');
+    const { annotatedPdf } = await import('./share.js');
+    const bytes = await annotatedPdf({ data: f.data, docName: doc.name, notes, author: authorName() });
+    $('loading').hidden = true;
+    await shareOrDownload(`${safeName(doc.name)} - comments from ${safeName(authorName())}.pdf`, bytes, 'application/pdf');
+  } catch (e) {
+    console.error(e);
+    $('loading').hidden = true;
+    toast('Could not make the PDF: ' + (e.message || e), 4500);
+  }
+}
+async function sendMarkdown(doc, notes) {
+  const f = await idb.get('files', doc.id);
+  if (!f) { toast('File not on this device'); return; }
+  const { markdownWithComments } = await import('./share.js');
+  const text = new TextDecoder().decode(f.data);
+  const hasProps = doc.type === 'md' && /^---\r?\n[\s\S]*?\r?\n---/.test(text);
+  const md = markdownWithComments({ text, type: doc.type, notes, author: authorName(), hasProps });
+  await shareOrDownload(`${safeName(doc.name)} - comments from ${safeName(authorName())}.md`, md);
+}
+// Markdown and text files become a PDF through the phone's print screen.
+async function printWithComments(doc) {
+  if (S.doc?.id !== doc.id) { await openDoc(doc.id); }
+  if (!S.article) return;
+  const notes = S.notes.slice().sort(byPlace);
+  const area = document.createElement('div');
+  area.id = 'printArea';
+  const date = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+  area.innerHTML = `<h1 class="ptitle" dir="auto">${esc(doc.name)}</h1><p class="psub">Comments from ${esc(authorName())} · ${esc(date)}</p>`;
+  const clone = S.article.cloneNode(true);
+  clone.removeAttribute('style');
+  clone.querySelector('details.props')?.remove();
+  clone.querySelectorAll('.pin').forEach((pin) => {
+    const sup = document.createElement('sup');
+    sup.className = 'cnum c-' + (notes.find((n) => n.id === pin.dataset.id)?.color || 'yellow');
+    sup.textContent = notes.findIndex((n) => n.id === pin.dataset.id) + 1;
+    const block = pin.parentNode;
+    pin.remove();
+    block.insertBefore(sup, block.firstChild);
+  });
+  area.appendChild(clone);
+  area.insertAdjacentHTML('beforeend', `<section class="pcomments"><h2>Comments</h2><ol>${notes.map((n) =>
+    `<li><span class="plabel" dir="auto">${esc(noteLabel(n))}</span>${n.quote ? `<div class="pquote" dir="auto">“${esc(n.quote)}”</div>` : ''}${n.text ? `<div class="ptext" dir="auto">${esc(n.text)}</div>` : ''}</li>`).join('')}</ol></section>`);
+  document.body.appendChild(area);
+  document.body.classList.add('printing');
+  const done = () => { area.remove(); document.body.classList.remove('printing'); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  setTimeout(() => { try { window.print(); } catch { toast('Printing is not available here'); done(); } }, 50);
+}
 $('notesCopy').onclick = async () => {
   if (!S.notes.length) { toast('No notes yet'); return; }
   try {
